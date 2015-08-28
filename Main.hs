@@ -6,20 +6,15 @@ import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Trans.Except
 
-type EvalParser = StateT Integer (ExceptT String Parser)
+type EvalParser = StateT Integer Parser
 
 liftP :: Parser a -> EvalParser a
-liftP = lift . lift
+liftP = lift
 
 parseOp :: Char -> Parser ()
 parseOp c = do skipSpace
                char c
                skipSpace
-
-parseAssign :: EvalParser Double
-parseAssign = do val <- addExpr
-                 modify (+1)
-                 return val
 
 addExpr :: EvalParser Double
 addExpr = do val <- factor
@@ -37,8 +32,8 @@ addExpr' = terms <|> return 0
 factor :: EvalParser Double
 factor = liftP double
 
-parseEval :: EvalParser a -> String -> Either String (Either String (a, Integer))
-parseEval p str = parseOnly (runExceptT (runStateT p 0)) (T.pack str)
+parseEval :: EvalParser a -> String -> Either String (a, Integer)
+parseEval p str = parseOnly (runStateT p 0) (T.pack str)
 
 main :: IO ()
-main = do print $ parseEval addExpr "1 + 2"
+main = print $ parseEval addExpr "1 + 2"
